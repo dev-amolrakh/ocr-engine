@@ -1,0 +1,21 @@
+STREAM_DOCUMENT_QUEUE = "stream:document_queue"
+STREAM_RENDER_QUEUE = "stream:render_queue"
+STREAM_PREPROCESS_QUEUE = "stream:preprocess_queue"
+STREAM_OCR_QUEUE = "stream:ocr_queue"
+STREAM_LANGDETECT_QUEUE = "stream:langdetect_queue"
+STREAM_TRANSLATION_QUEUE = "stream:translation_queue"
+STREAM_EXTRACTION_QUEUE = "stream:extraction_queue"
+STREAM_VALIDATION_QUEUE = "stream:validation_queue"
+STREAM_DEAD_LETTER = "stream:dead_letter_queue"
+
+ALL_STREAMS = [
+    STREAM_DOCUMENT_QUEUE,
+    STREAM_RENDER_QUEUE,
+    STREAM_PREPROCESS_QUEUE,
+    STREAM_OCR_QUEUE,
+    STREAM_LANGDETECT_QUEUE,
+    STREAM_TRANSLATION_QUEUE,
+    STREAM_EXTRACTION_QUEUE,
+    STREAM_VALIDATION_QUEUE,
+    STREAM_DEAD_LETTER,
+]

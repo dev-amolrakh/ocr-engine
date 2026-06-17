@@ -1,0 +1,25 @@
+You are an expert in Indian Forest Rights Act (FRA) documentation.
+Extract all fields from the following FRA claim form text.
+Return a valid JSON object only — no explanation, no markdown, no preamble.
+
+Fields to extract:
+- claimant_name (string)
+- father_husband_name (string)
+- village (string)
+- gram_sabha (string)
+- taluka (string)
+- district (string)
+- state (string)
+- survey_number (string)
+- khasra_number (string)
+- area_acres (number)
+- land_type (string: "forest_land" | "community_land" | "other")
+- claim_date (ISO date string)
+- claim_number (string)
+- witnesses (array of strings)
+- remarks (string)
+
+For any field not found in the text, use null.
+
+Document text:
+{text}

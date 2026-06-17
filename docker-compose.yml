@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    ports: ["27017:27017"]
+    volumes: ["mongo_data:/data/db"]
+    command: mongod --wiredTigerCacheSizeGB 2
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports: ["6379:6379"]
+    command: redis-server --maxmemory 4gb --maxmemory-policy allkeys-lru --appendonly yes
+
+  ollama:
+    image: ollama/ollama
+    restart: unless-stopped
+    ports: ["11434:11434"]
+    volumes: ["/models/ollama:/root/.ollama"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports: ["9090:9090"]
+    volumes:
+      - "./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml"
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports: ["3000:3000"]
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+  loki:
+    image: grafana/loki:latest
+    restart: unless-stopped
+    ports: ["3100:3100"]
+
+volumes:
+  mongo_data:

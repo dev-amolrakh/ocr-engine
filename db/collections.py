@@ -1,0 +1,4 @@
+COLLECTION_JOBS = "jobs"
+COLLECTION_OCR_PAGES = "ocr_pages"
+COLLECTION_EXTRACTED_DATA = "extracted_data"
+COLLECTION_FAILED_JOBS = "failed_jobs"

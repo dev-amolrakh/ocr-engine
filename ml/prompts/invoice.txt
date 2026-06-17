@@ -1,0 +1,21 @@
+Extract invoice fields. Return valid JSON only.
+
+Fields:
+- invoice_number (string)
+- invoice_date (ISO date)
+- vendor_name (string)
+- vendor_gstin (string)
+- buyer_name (string)
+- buyer_gstin (string)
+- line_items (array of {description, hsn_code, quantity, unit, unit_price, tax_rate, total})
+- subtotal (number)
+- cgst (number)
+- sgst (number)
+- igst (number)
+- total_amount (number)
+- payment_terms (string)
+
+For any field not found in the text, use null.
+
+Document text:
+{text}

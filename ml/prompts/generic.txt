@@ -1,0 +1,9 @@
+Extract all structured information from the following document text.
+Return a valid JSON object with field names as keys and extracted values.
+Use descriptive field names in snake_case.
+For dates, use ISO format (YYYY-MM-DD).
+For amounts, use numbers.
+For any field that is unclear or not found, use null.
+
+Document text:
+{text}

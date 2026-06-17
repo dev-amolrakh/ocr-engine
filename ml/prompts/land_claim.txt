@@ -1,0 +1,19 @@
+Extract land claim document fields.
+Return valid JSON only.
+
+Fields:
+- claimant_name (string)
+- village (string)
+- district (string)
+- survey_number (string)
+- area_acres (number)
+- boundaries (object: {north, south, east, west})
+- registration_number (string)
+- date_of_claim (ISO date)
+- tahsildar_name (string)
+- remarks (string)
+
+For any field not found in the text, use null.
+
+Document text:
+{text}

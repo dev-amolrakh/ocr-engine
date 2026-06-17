@@ -1,0 +1,19 @@
+Extract certificate fields. Return valid JSON only.
+
+Fields:
+- certificate_type (string: e.g. "caste", "income", "domicile", "birth", "death", "marriage")
+- certificate_number (string)
+- issued_to (string)
+- father_name (string)
+- date_of_issue (ISO date)
+- issuing_authority (string)
+- district (string)
+- state (string)
+- purpose (string)
+- valid_until (ISO date or null)
+- remarks (string)
+
+For any field not found in the text, use null.
+
+Document text:
+{text}

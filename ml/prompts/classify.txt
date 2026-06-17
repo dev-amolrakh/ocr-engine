@@ -1,0 +1,15 @@
+Classify the following document into exactly ONE of these categories:
+- invoice
+- aadhaar
+- fra_form
+- land_claim
+- certificate
+- pan_card
+- ration_card
+- birth_certificate
+- unknown
+
+Output ONLY the category name, nothing else.
+
+Document text:
+{text}

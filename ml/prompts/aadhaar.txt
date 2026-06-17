@@ -1,0 +1,16 @@
+Extract Aadhaar card fields. Return valid JSON only.
+IMPORTANT: Do NOT extract or store the full 12-digit Aadhaar number.
+Only extract the last 4 digits as "aadhaar_last4".
+
+Fields:
+- name (string)
+- dob (ISO date or partial: "YYYY" if only year visible)
+- gender (string: "M" | "F" | "T")
+- aadhaar_last4 (string, 4 digits only)
+- address (object: {house, street, locality, city, district, state, pincode})
+- mobile_linked (boolean — true if mobile icon present)
+
+For any field not found in the text, use null.
+
+Document text:
+{text}
