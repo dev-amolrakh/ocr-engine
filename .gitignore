@@ -196,6 +196,7 @@ models/indictrans2/**
 config.local.py
 .env.local
 .env.*.local
+.env
 
 # Docker
 docker-compose.override.yml
