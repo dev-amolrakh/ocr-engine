@@ -53,19 +53,17 @@ This repository is intended to demonstrate applied skills in:
 
 Most public "OCR" repositories are thin wrappers around Tesseract or a single vision API. This project instead demonstrates a **complete engineering approach** to solving OCR as a real backend systems problem:
 
-| Capability |                           Implementation |                                                                                              
-|- --|--------------------------------- - -----------------------------------------------------------------------------------------------------------| 
+| Capability                           | Implementation                                                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
 | **End-to-end ingestion pipeline**    | Upload → Queue → Render → Preprocess → OCR → Translate → Extract → Validate → Persist                        |
-| **Hybrid OCR strategy**              | PaddleOCR (fast, primary) with automatic Qwen-VL fallback (accuracy-critical / handwritten cases)           | 
-| **Indian language OCR support** |      OCR, language detection, and translation stages are built around Indian regional languages, not just English |
-| **Handwriting-aware routing** |        Documents are classified as handwritten vs. printed *_efore*_OCR engine selection                       |     
-| **Named Entity Recognition (NER)** |   Extraction stage identifies names, locations, dates, and identifiers as typed entities, not just raw text |   
-| **Multi-stage async pipeline** |       7 independently scalable workers connected via Redis Streams                        |                         
-| **Stateful job tracking**            | MongoDB-backed job lifecycle, page-level OCR metadata, and result persistence    |                            
-| **Full observability stack**         | Prometheus + Grafana + structured logging (Loki-compatible) out of the box   |                                
-| **Modular, extensible architecture** | Clear separation of API / service / worker / ML / persistence layers for production scaling        |          
-
----
+| **Hybrid OCR strategy**              | PaddleOCR (fast, primary) with automatic Qwen-VL fallback (accuracy-critical / handwritten cases)            |
+| **Indian language OCR support**      | OCR, language detection, and translation stages are built around Indian regional languages, not just English |
+| **Handwriting-aware routing**        | Documents are classified as handwritten vs. printed before OCR engine selection                              |
+| **Named Entity Recognition (NER)**   | Extraction stage identifies names, locations, dates, and identifiers as typed entities, not just raw text    |
+| **Multi-stage async pipeline**       | 7 independently scalable workers connected via Redis Streams                                                 |
+| **Stateful job tracking**            | MongoDB-backed job lifecycle, page-level OCR metadata, and result persistence                                |
+| **Full observability stack**         | Prometheus + Grafana + structured logging (Loki-compatible) out of the box                                   |
+| **Modular, extensible architecture** | Clear separation of API / service / worker / ML / persistence layers for production scaling                  |
 
 ## 🏛️ System Architecture
 
@@ -73,7 +71,7 @@ The platform follows an **event-driven, queue-based architecture**. The API laye
 
 ### 1️⃣ OCR Decision Flow — Hybrid Model Routing
 
-The core intelligence of the engine: every page independently decides *_hich OCR model handles it*_based on handwriting detection and live confidence scoring.
+The core intelligence of the engine: every page independently decides _\_hich OCR model handles it_\_based on handwriting detection and live confidence scoring.
 
 ```mermaid
 flowchart TD
@@ -89,7 +87,7 @@ flowchart TD
     H --> I[Store OCR Source Metadata]
 ```
 
-> 💡 **Engineering note:** This confidence-gated fallback pattern means the system gets the *_peed*_of a lightweight OCR engine on the ~90% of documents that are cleanly printed, while automatically escalating to a heavier vision-language model only when needed — balancing cost, latency, and accuracy dynamically per-page rather than per-batch.
+> 💡 **Engineering note:** This confidence-gated fallback pattern means the system gets the _\_peed_\_of a lightweight OCR engine on the ~90% of documents that are cleanly printed, while automatically escalating to a heavier vision-language model only when needed — balancing cost, latency, and accuracy dynamically per-page rather than per-batch.
 
 ### 2️⃣ Worker Pipeline — Sequential Async Stages
 
@@ -169,13 +167,13 @@ flowchart TD
 
 ### Core Architectural Components
 
-<table>
-<tr><td width="30%"><b>1. API Layer</b></td><td>Built with FastAPI. Exposes endpoints for upload, job status, results, health checks, and admin operations. Fully async, non-blocking I/O throughout.</td></tr>
-<tr><td><b>2. Processing Pipeline</b></td><td>Renderer Worker converts PDFs into page images → Preprocessor Worker enhances image quality → OCR Worker runs hybrid OCR (PaddleOCR + Qwen-VL) → Language Detection & Translation Workers handle multilingual text → Extraction & Validation Workers produce clean, structured output.</td></tr>
-<tr><td><b>3. Message Queue Layer</b></td><td>Redis Streams orchestrate all asynchronous background processing, with built-in retry and dead-letter handling via shared worker base logic.</td></tr>
-<tr><td><b>4. Persistence Layer</b></td><td>MongoDB stores jobs, page-level OCR data, extracted results, and configuration. Local storage handles incoming, processed, failed, and archived files.</td></tr>
-<tr><td><b>5. Observability Layer</b></td><td>Prometheus metrics, structured logging via <code>structlog</code>, and health checks across MongoDB, Redis, Ollama, PaddleOCR, and model files.</td></tr>
-</table>
+| Component                  | Description                                                                                                                                                                                                                                                                            |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. API Layer**           | Built with FastAPI. Exposes endpoints for upload, job status, results, health checks, and admin operations. Fully async, non-blocking I/O throughout.                                                                                                                                  |
+| **2. Processing Pipeline** | Renderer Worker converts PDFs into page images → Preprocessor Worker enhances image quality → OCR Worker runs hybrid OCR (PaddleOCR + Qwen-VL) → Language Detection & Translation Workers handle multilingual text → Extraction & Validation Workers produce clean, structured output. |
+| **3. Message Queue Layer** | Redis Streams orchestrate all asynchronous background processing, with built-in retry and dead-letter handling via shared worker base logic.                                                                                                                                           |
+| **4. Persistence Layer**   | MongoDB stores jobs, page-level OCR data, extracted results, and configuration. Local storage handles incoming, processed, failed, and archived files.                                                                                                                                 |
+| **5. Observability Layer** | Prometheus metrics, structured logging via <code>structlog</code>, and health checks across MongoDB, Redis, Ollama, PaddleOCR, and model files.                                                                                                                                        |
 
 ---
 
@@ -256,7 +254,7 @@ One of the key engineering decisions in this system is **routing documents to di
 
 - **PaddleOCR** as the primary, low-latency OCR engine for printed text
 - Automatic **Qwen-VL (via Ollama)** fallback for low-confidence or visually complex cases
-- **Handwriting detection** that adjusts the processing path *_efore*_OCR even runs
+- **Handwriting detection** that adjusts the processing path _\_efore_\_OCR even runs
 
 ### 2. Multi-Language Support — Built for Indian Regional Languages
 
@@ -277,13 +275,13 @@ One of the key engineering decisions in this system is **routing documents to di
 - Strict **Pydantic validation layer** ensures every output conforms to an expected, predictable schema — no silent malformed data downstream
 
 ### 5. Scalable Background Processing
--
- Uploads are accepted and acknowledged **immediately**; all heavy lifting happens asynchronously
+
+- Uploads are accepted and acknowledged **immediately**; all heavy lifting happens asynchronously
 - Every worker stage runs independently and can be **horizontally scaled** without touching other stages
 
 ### 6. Operational Readiness
--
- `/health` and `/health/detailed` endpoints for full system diagnostics
+
+- `/health` and `/health/detailed` endpoints for full system diagnostics
 - `/metrics` endpoint wired for **Prometheus** scraping
 - One-command **Docker Compose** setup for all infrastructure dependencies
 
@@ -291,47 +289,9 @@ One of the key engineering decisions in this system is **routing documents to di
 
 ## 🧰 Technology Stack
 
-<table>
-<tr><td valign="top" width="25%">
-
-**Backend**
--
- Python 3.11+
-- FastAPI
-- Uvicorn
-- Pydantic + Pydantic Settings
-
-</td><td valign="top" width="25%">
-
-**Data & Messaging**
-
-- MongoDB
-- Redis Streams
-- Motor (async MongoDB driver)
-
-</td><td valign="top" width="25%">
-
-**OCR / AI / ML**
--
- PaddleOCR (with Indian-language model support)
-- Qwen-VL (via Ollama)
-- fastText (language ID)
-- IndicTrans2 (translation)
-- NER (named entity recognition on extracted text)
-- OpenCV + Pillow
-- PyMuPDF (PDF rendering)
-
-</td><td valign="top" width="25%">
-
-**Observability**
--
- Prometheus
-- Grafana
-- structlog
-- Loki-compatible logging
-
-</td></tr>
-</table>
+| Backend                                                            | Data & Messaging                                         | OCR / AI / ML                                                                                                                                                                                                                   | Observability                                                 |
+| ------------------------------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Python 3.11+<br>FastAPI<br>Uvicorn<br>Pydantic + Pydantic Settings | MongoDB<br>Redis Streams<br>Motor (async MongoDB driver) | PaddleOCR (with Indian-language model support)<br>Qwen-VL (via Ollama)<br>fastText (language ID)<br>IndicTrans2 (translation)<br>NER (named entity recognition on extracted text)<br>OpenCV + Pillow<br>PyMuPDF (PDF rendering) | Prometheus<br>Grafana<br>structlog<br>Loki-compatible logging |
 
 ---
 
@@ -357,34 +317,34 @@ tests/               # Unit/integration test suites
 ## 📡 API Reference
 
 ### Upload Endpoints
-|
- Method | Endpoint |              Description                      |               
-|- --|--- - -------------------|- - --------------------------------------|-------- 
-| `POST` | `/api/v1/upload`  |     Upload a single PDF or image for OCR processing |
+
+| Method | Endpoint              | Description                                     |
+| ------ | --------------------- | ----------------------------------------------- |
+| `POST` | `/api/v1/upload`      | Upload a single PDF or image for OCR processing |
 | `POST` | `/api/v1/upload/bulk` | Upload multiple files in a single request       |
 
 ### Job Endpoints
-|
- Method |   Endpoint                |       Description               |                  
-|- --|----- - ---------------|------------- - ------|------------------------------------ 
-| `GET`   |  `/api/v1/jobs/{job_id}`     |   Fetch current job status and OCR statistics |
-| `POST`  |  `/api/v1/jobs/status`  |        Check the status of multiple jobs at once   |
-| `POST`  |  `/api/v1/jobs/{job_id}/retry` | Retry a failed or incomplete job          |  
-| `DELETE` | `/api/v1/jobs/{job_id}`    |    Delete and archive a job  |                  
+
+| Method   | Endpoint                      | Description                                 |
+| -------- | ----------------------------- | ------------------------------------------- |
+| `GET`    | `/api/v1/jobs/{job_id}`       | Fetch current job status and OCR statistics |
+| `POST`   | `/api/v1/jobs/status`         | Check the status of multiple jobs at once   |
+| `POST`   | `/api/v1/jobs/{job_id}/retry` | Retry a failed or incomplete job            |
+| `DELETE` | `/api/v1/jobs/{job_id}`       | Delete and archive a job                    |
 
 ### Result Endpoints
 
-| Method | Endpoint |                   Description  |                         
-|- -----| - ---------|---------------- - -----------------------|------------- 
+| Method | Endpoint                   | Description                           |
+| ------ | -------------------------- | ------------------------------------- |
 | `GET`  | `/api/v1/results/{job_id}` | Retrieve extracted, structured output |
 
 ### Health & Monitoring
 
-| Method | Endpoint    |               Description      |           
-|- --|--- - ------------------------| - -------------------|------- 
-| `GET`  | `/api/v1/health`  |         Basic health check  |        
-| `GET` |  `/api/v1/health/detailed` | Full dependency diagnostics |
-| `GET` |  `/metrics`           |      Prometheus scrape endpoint | 
+| Method | Endpoint                  | Description                 |
+| ------ | ------------------------- | --------------------------- |
+| `GET`  | `/api/v1/health`          | Basic health check          |
+| `GET`  | `/api/v1/health/detailed` | Full dependency diagnostics |
+| `GET`  | `/metrics`                | Prometheus scrape endpoint  |
 
 📘 Full interactive Swagger documentation is available at **`/api/docs`** once the service is running.
 
@@ -402,12 +362,12 @@ tests/               # Unit/integration test suites
 ## ⚡ Local Setup
 
 ### Prerequisites
--
- Python 3.11+
+
+- Python 3.11+
 - MongoDB
 - Redis
 - Ollama
-- *_Optional)*_Docker, for infrastructure services
+- _\_Optional)_\_Docker, for infrastructure services
 
 ### Quick Start (Windows example)
 
@@ -432,11 +392,11 @@ python main.py
 
 Then open:
 
-| Service        |     URL                 |           
-|- ---------|-------- - ------------|----------------- 
+| Service            | URL                            |
+| ------------------ | ------------------------------ |
 | API Docs (Swagger) | http://localhost:8000/api/docs |
-| Prometheus  |        http://localhost:9090    |      
-| Grafana    |         http://localhost:3000   |       
+| Prometheus         | http://localhost:9090          |
+| Grafana            | http://localhost:3000          |
 
 📖 For complete setup steps, see the included setup guide.
 
