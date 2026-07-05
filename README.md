@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔍 OCR Engine — Hybrid AI-Powered Document Intelligence Platform
+# 🔍 OCR Engine - Hybrid AI-Powered Document Intelligence Platform
 
 ### Production-Grade, Event-Driven OCR & Document Extraction System for Indian Government & Enterprise Documents
 
@@ -15,7 +15,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](#license)
 
-**A complete engineering case study in building an event-driven OCR pipeline: system design, distributed workers, hybrid AI model routing, and production observability — not just an OCR API wrapper.**
+**A complete engineering case study in building an event-driven OCR pipeline: system design, distributed workers, hybrid AI model routing, and production observability - not just an OCR API wrapper.**
 
 [Overview](#-why-this-project) • [Architecture](#-system-architecture) • [OCR Comparison](#-ocr-output-comparison-printed-vs-handwritten) • [Tech Stack](#-technology-stack) • [API Reference](#-api-reference) • [Setup](#-local-setup) • [Roadmap](#-future-improvements)
 
@@ -32,20 +32,20 @@ Built and designed by **Amol Rakh**
 
 ## 📌 About This Project
 
-**OCR Engine** is a production-style, event-driven document processing platform built to handle real-world OCR workloads at scale — the kind of documents government and enterprise systems actually deal with: **Aadhaar cards, PAN cards, invoices, Forest Rights Act (FRA) claim forms, and land record documents.**
+**OCR Engine** is a production-style, event-driven document processing platform built to handle real-world OCR workloads at scale - the kind of documents government and enterprise systems actually deal with: **Aadhaar cards, PAN cards, invoices, Forest Rights Act (FRA) claim forms, and land record documents.**
 
-Rather than wrapping a single OCR library behind an API, this project is architected as a **multi-stage, asynchronous document intelligence pipeline** — combining computer vision preprocessing, hybrid OCR model routing, language detection, machine translation, document classification, and schema-validated structured extraction, all coordinated through a message-queue-driven worker system.
+Rather than wrapping a single OCR library behind an API, this project is architected as a **multi-stage, asynchronous document intelligence pipeline** - combining computer vision preprocessing, hybrid OCR model routing, language detection, machine translation, document classification, and schema-validated structured extraction, all coordinated through a message-queue-driven worker system.
 
 This repository is intended to demonstrate applied skills in:
 
-- 🏗️ **System design** — event-driven architecture, service decomposition, async worker orchestration
-- 🤖 **Applied AI/ML engineering** — hybrid model routing between PaddleOCR and Qwen-VL based on confidence and handwriting detection
-- 🇮🇳 **Indian language OCR** — built with first-class support for Indian regional languages, not just English, across the OCR, language detection, and translation stages
-- 🌐 **Multilingual NLP pipelines** — language identification (fastText) and translation (IndicTrans2) for Indian regional languages
-- 🏷️ **Named Entity Recognition (NER)** — entity-aware extraction that identifies names, locations, dates, and document-specific identifiers directly from OCR text
-- 📐 **Structured data extraction** — LLM-assisted extraction (Qwen2.5) validated through strict Pydantic schemas
-- 📊 **Production observability** — Prometheus metrics, Grafana dashboards, structured logging with Loki
-- ⚙️ **Distributed backend engineering** — Redis Streams for queueing, MongoDB for state/persistence, retry-safe and dead-letter-aware workers
+- 🏗️ **System design** - event-driven architecture, service decomposition, async worker orchestration
+- 🤖 **Applied AI/ML engineering** - hybrid model routing between PaddleOCR and Qwen-VL based on confidence and handwriting detection
+- 🇮🇳 **Indian language OCR** - built with first-class support for Indian regional languages, not just English, across the OCR, language detection, and translation stages
+- 🌐 **Multilingual NLP pipelines** - language identification (fastText) and translation (IndicTrans2) for Indian regional languages
+- 🏷️ **Named Entity Recognition (NER)** - entity-aware extraction that identifies names, locations, dates, and document-specific identifiers directly from OCR text
+- 📐 **Structured data extraction** - LLM-assisted extraction (Qwen2.5) validated through strict Pydantic schemas
+- 📊 **Production observability** - Prometheus metrics, Grafana dashboards, structured logging with Loki
+- ⚙️ **Distributed backend engineering** - Redis Streams for queueing, MongoDB for state/persistence, retry-safe and dead-letter-aware workers
 
 ---
 
@@ -67,9 +67,9 @@ Most public "OCR" repositories are thin wrappers around Tesseract or a single vi
 
 ## 🏛️ System Architecture
 
-The platform follows an **event-driven, queue-based architecture**. The API layer is a thin ingestion surface — it accepts uploads, persists job metadata to MongoDB, and immediately publishes a work item to Redis Streams. From there, a chain of independent background workers processes each pipeline stage asynchronously, which means the system scales horizontally and degrades gracefully under load.
+The platform follows an **event-driven, queue-based architecture**. The API layer is a thin ingestion surface - it accepts uploads, persists job metadata to MongoDB, and immediately publishes a work item to Redis Streams. From there, a chain of independent background workers processes each pipeline stage asynchronously, which means the system scales horizontally and degrades gracefully under load.
 
-### 1️⃣ OCR Decision Flow — Hybrid Model Routing
+### 1️⃣ OCR Decision Flow - Hybrid Model Routing
 
 The core intelligence of the engine: every page independently decides _\_hich OCR model handles it_\_based on handwriting detection and live confidence scoring.
 
@@ -87,9 +87,9 @@ flowchart TD
     H --> I[Store OCR Source Metadata]
 ```
 
-> 💡 **Engineering note:** This confidence-gated fallback pattern means the system gets the _\_peed_\_of a lightweight OCR engine on the ~90% of documents that are cleanly printed, while automatically escalating to a heavier vision-language model only when needed — balancing cost, latency, and accuracy dynamically per-page rather than per-batch.
+> 💡 **Engineering note:** This confidence-gated fallback pattern means the system gets the _\_peed_\_of a lightweight OCR engine on the ~90% of documents that are cleanly printed, while automatically escalating to a heavier vision-language model only when needed - balancing cost, latency, and accuracy dynamically per-page rather than per-batch.
 
-### 2️⃣ Worker Pipeline — Sequential Async Stages
+### 2️⃣ Worker Pipeline - Sequential Async Stages
 
 ```mermaid
 flowchart LR
@@ -177,7 +177,7 @@ flowchart TD
 
 ---
 
-## 🖼️ OCR Output Comparison — Printed vs. Handwritten Text
+## 🖼️ OCR Output Comparison - Printed vs. Handwritten Text
 
 One of the key engineering decisions in this system is **routing documents to different OCR engines depending on whether the text is printed or handwritten.** The comparison below shows the same extraction pipeline handling both cases side-by-side.
 
@@ -256,15 +256,15 @@ One of the key engineering decisions in this system is **routing documents to di
 - Automatic **Qwen-VL (via Ollama)** fallback for low-confidence or visually complex cases
 - **Handwriting detection** that adjusts the processing path _\_efore_\_OCR even runs
 
-### 2. Multi-Language Support — Built for Indian Regional Languages
+### 2. Multi-Language Support - Built for Indian Regional Languages
 
 - Language identification performed directly on OCR output using **fastText**
-- Automatic translation of non-English text using **IndicTrans2**-based logic — critical for documents in Hindi, Marathi, and other regional languages common in government workflows
-- The OCR, language detection, and translation stages are designed around **Indian-language documents from the start**, not retrofitted onto an English-first pipeline — meaning regional-language Aadhaar cards, FRA forms, and land records can be scanned and processed as effectively as English documents
+- Automatic translation of non-English text using **IndicTrans2**-based logic - critical for documents in Hindi, Marathi, and other regional languages common in government workflows
+- The OCR, language detection, and translation stages are designed around **Indian-language documents from the start**, not retrofitted onto an English-first pipeline - meaning regional-language Aadhaar cards, FRA forms, and land records can be scanned and processed as effectively as English documents
 
 ### 3. Named Entity Recognition (NER) for Document Fields
 
-- The extraction stage doesn't just pull raw text — it identifies **typed entities** within OCR output, such as person names, locations (village/district/state), dates, and document-specific identifiers (claim numbers, PAN/Aadhaar numbers)
+- The extraction stage doesn't just pull raw text - it identifies **typed entities** within OCR output, such as person names, locations (village/district/state), dates, and document-specific identifiers (claim numbers, PAN/Aadhaar numbers)
 - NER runs on **translated, language-normalized text**, so entities are recognized correctly even when the source document was originally in a regional Indian language
 - Entity-level output feeds directly into the structured extraction schema, making downstream validation and field-mapping more reliable than plain regex-based extraction
 
@@ -272,7 +272,7 @@ One of the key engineering decisions in this system is **routing documents to di
 
 - Smart, rule-assisted extraction tuned for known Indian document formats
 - Automatic **document-type classification**: Aadhaar, PAN, invoices, FRA forms, land claim documents
-- Strict **Pydantic validation layer** ensures every output conforms to an expected, predictable schema — no silent malformed data downstream
+- Strict **Pydantic validation layer** ensures every output conforms to an expected, predictable schema - no silent malformed data downstream
 
 ### 5. Scalable Background Processing
 
@@ -432,7 +432,7 @@ This project applies core software engineering principles throughout:
 
 - **Separation of concerns** between API, service, worker, and data layers
 - **Event-driven architecture** for fully asynchronous processing
-- **Modular components** for OCR, translation, extraction, and validation — each independently testable and replaceable
+- **Modular components** for OCR, translation, extraction, and validation - each independently testable and replaceable
 - **Retry-safe background processing** with dead-letter handling
 - **Extensible document classification** and extraction logic, designed to onboard new document types with minimal changes
 
@@ -451,7 +451,7 @@ This project applies core software engineering principles throughout:
 
 ## 🏁 Summary
 
-**OCR Engine** is a complete document intelligence architecture that goes far beyond basic text extraction. It combines **hybrid AI model routing, distributed async workers, multilingual NLP, schema-validated structured extraction, and production-grade observability** into a practical, real-world system for intelligent document processing — built for the kinds of high-volume, multi-format document workflows found in government and enterprise systems.
+**OCR Engine** is a complete document intelligence architecture that goes far beyond basic text extraction. It combines **hybrid AI model routing, distributed async workers, multilingual NLP, schema-validated structured extraction, and production-grade observability** into a practical, real-world system for intelligent document processing - built for the kinds of high-volume, multi-format document workflows found in government and enterprise systems.
 
 ---
 
