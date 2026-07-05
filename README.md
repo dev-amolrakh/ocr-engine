@@ -23,7 +23,14 @@
 
 ---
 
-## 📌 About This Project
+## � Credit
+
+Built and designed by **Amol Rakh**  
+**Software Developer**
+
+---
+
+## �📌 About This Project
 
 **OCR Engine** is a production-style, event-driven document processing platform built to handle real-world OCR workloads at scale — the kind of documents government and enterprise systems actually deal with: **Aadhaar cards, PAN cards, invoices, Forest Rights Act (FRA) claim forms, and land record documents.**
 
@@ -46,17 +53,17 @@ This repository is intended to demonstrate applied skills in:
 
 Most public "OCR" repositories are thin wrappers around Tesseract or a single vision API. This project instead demonstrates a **complete engineering approach** to solving OCR as a real backend systems problem:
 
-| Capability | Implementation |
-|---|---|
-| **End-to-end ingestion pipeline** | Upload → Queue → Render → Preprocess → OCR → Translate → Extract → Validate → Persist |
-| **Hybrid OCR strategy** | PaddleOCR (fast, primary) with automatic Qwen-VL fallback (accuracy-critical / handwritten cases) |
-| **Indian language OCR support** | OCR, language detection, and translation stages are built around Indian regional languages, not just English |
-| **Handwriting-aware routing** | Documents are classified as handwritten vs. printed *before* OCR engine selection |
-| **Named Entity Recognition (NER)** | Extraction stage identifies names, locations, dates, and identifiers as typed entities, not just raw text |
-| **Multi-stage async pipeline** | 7 independently scalable workers connected via Redis Streams |
-| **Stateful job tracking** | MongoDB-backed job lifecycle, page-level OCR metadata, and result persistence |
-| **Full observability stack** | Prometheus + Grafana + structured logging (Loki-compatible) out of the box |
-| **Modular, extensible architecture** | Clear separation of API / service / worker / ML / persistence layers for production scaling |
+| Capability                           | Implementation                                                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| **End-to-end ingestion pipeline**    | Upload → Queue → Render → Preprocess → OCR → Translate → Extract → Validate → Persist                        |
+| **Hybrid OCR strategy**              | PaddleOCR (fast, primary) with automatic Qwen-VL fallback (accuracy-critical / handwritten cases)            |
+| **Indian language OCR support**      | OCR, language detection, and translation stages are built around Indian regional languages, not just English |
+| **Handwriting-aware routing**        | Documents are classified as handwritten vs. printed _before_ OCR engine selection                            |
+| **Named Entity Recognition (NER)**   | Extraction stage identifies names, locations, dates, and identifiers as typed entities, not just raw text    |
+| **Multi-stage async pipeline**       | 7 independently scalable workers connected via Redis Streams                                                 |
+| **Stateful job tracking**            | MongoDB-backed job lifecycle, page-level OCR metadata, and result persistence                                |
+| **Full observability stack**         | Prometheus + Grafana + structured logging (Loki-compatible) out of the box                                   |
+| **Modular, extensible architecture** | Clear separation of API / service / worker / ML / persistence layers for production scaling                  |
 
 ---
 
@@ -66,7 +73,7 @@ The platform follows an **event-driven, queue-based architecture**. The API laye
 
 ### 1️⃣ OCR Decision Flow — Hybrid Model Routing
 
-The core intelligence of the engine: every page independently decides *which OCR model handles it* based on handwriting detection and live confidence scoring.
+The core intelligence of the engine: every page independently decides _which OCR model handles it_ based on handwriting detection and live confidence scoring.
 
 ```mermaid
 flowchart TD
@@ -82,7 +89,7 @@ flowchart TD
     H --> I[Store OCR Source Metadata]
 ```
 
-> 💡 **Engineering note:** This confidence-gated fallback pattern means the system gets the *speed* of a lightweight OCR engine on the ~90% of documents that are cleanly printed, while automatically escalating to a heavier vision-language model only when needed — balancing cost, latency, and accuracy dynamically per-page rather than per-batch.
+> 💡 **Engineering note:** This confidence-gated fallback pattern means the system gets the _speed_ of a lightweight OCR engine on the ~90% of documents that are cleanly printed, while automatically escalating to a heavier vision-language model only when needed — balancing cost, latency, and accuracy dynamically per-page rather than per-batch.
 
 ### 2️⃣ Worker Pipeline — Sequential Async Stages
 
@@ -246,30 +253,36 @@ One of the key engineering decisions in this system is **routing documents to di
 ## ✨ Key Features
 
 ### 1. Hybrid OCR Engine
+
 - **PaddleOCR** as the primary, low-latency OCR engine for printed text
 - Automatic **Qwen-VL (via Ollama)** fallback for low-confidence or visually complex cases
-- **Handwriting detection** that adjusts the processing path *before* OCR even runs
+- **Handwriting detection** that adjusts the processing path _before_ OCR even runs
 
 ### 2. Multi-Language Support — Built for Indian Regional Languages
+
 - Language identification performed directly on OCR output using **fastText**
 - Automatic translation of non-English text using **IndicTrans2**-based logic — critical for documents in Hindi, Marathi, and other regional languages common in government workflows
 - The OCR, language detection, and translation stages are designed around **Indian-language documents from the start**, not retrofitted onto an English-first pipeline — meaning regional-language Aadhaar cards, FRA forms, and land records can be scanned and processed as effectively as English documents
 
 ### 3. Named Entity Recognition (NER) for Document Fields
+
 - The extraction stage doesn't just pull raw text — it identifies **typed entities** within OCR output, such as person names, locations (village/district/state), dates, and document-specific identifiers (claim numbers, PAN/Aadhaar numbers)
 - NER runs on **translated, language-normalized text**, so entities are recognized correctly even when the source document was originally in a regional Indian language
 - Entity-level output feeds directly into the structured extraction schema, making downstream validation and field-mapping more reliable than plain regex-based extraction
 
 ### 4. Structured, Schema-Validated Extraction
+
 - Smart, rule-assisted extraction tuned for known Indian document formats
 - Automatic **document-type classification**: Aadhaar, PAN, invoices, FRA forms, land claim documents
 - Strict **Pydantic validation layer** ensures every output conforms to an expected, predictable schema — no silent malformed data downstream
 
 ### 5. Scalable Background Processing
+
 - Uploads are accepted and acknowledged **immediately**; all heavy lifting happens asynchronously
 - Every worker stage runs independently and can be **horizontally scaled** without touching other stages
 
 ### 6. Operational Readiness
+
 - `/health` and `/health/detailed` endpoints for full system diagnostics
 - `/metrics` endpoint wired for **Prometheus** scraping
 - One-command **Docker Compose** setup for all infrastructure dependencies
@@ -282,6 +295,7 @@ One of the key engineering decisions in this system is **routing documents to di
 <tr><td valign="top" width="25%">
 
 **Backend**
+
 - Python 3.11+
 - FastAPI
 - Uvicorn
@@ -290,6 +304,7 @@ One of the key engineering decisions in this system is **routing documents to di
 </td><td valign="top" width="25%">
 
 **Data & Messaging**
+
 - MongoDB
 - Redis Streams
 - Motor (async MongoDB driver)
@@ -297,6 +312,7 @@ One of the key engineering decisions in this system is **routing documents to di
 </td><td valign="top" width="25%">
 
 **OCR / AI / ML**
+
 - PaddleOCR (with Indian-language model support)
 - Qwen-VL (via Ollama)
 - fastText (language ID)
@@ -308,6 +324,7 @@ One of the key engineering decisions in this system is **routing documents to di
 </td><td valign="top" width="25%">
 
 **Observability**
+
 - Prometheus
 - Grafana
 - structlog
@@ -340,30 +357,34 @@ tests/               # Unit/integration test suites
 ## 📡 API Reference
 
 ### Upload Endpoints
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/v1/upload` | Upload a single PDF or image for OCR processing |
-| `POST` | `/api/v1/upload/bulk` | Upload multiple files in a single request |
+
+| Method | Endpoint              | Description                                     |
+| ------ | --------------------- | ----------------------------------------------- |
+| `POST` | `/api/v1/upload`      | Upload a single PDF or image for OCR processing |
+| `POST` | `/api/v1/upload/bulk` | Upload multiple files in a single request       |
 
 ### Job Endpoints
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/jobs/{job_id}` | Fetch current job status and OCR statistics |
-| `POST` | `/api/v1/jobs/status` | Check the status of multiple jobs at once |
-| `POST` | `/api/v1/jobs/{job_id}/retry` | Retry a failed or incomplete job |
-| `DELETE` | `/api/v1/jobs/{job_id}` | Delete and archive a job |
+
+| Method   | Endpoint                      | Description                                 |
+| -------- | ----------------------------- | ------------------------------------------- |
+| `GET`    | `/api/v1/jobs/{job_id}`       | Fetch current job status and OCR statistics |
+| `POST`   | `/api/v1/jobs/status`         | Check the status of multiple jobs at once   |
+| `POST`   | `/api/v1/jobs/{job_id}/retry` | Retry a failed or incomplete job            |
+| `DELETE` | `/api/v1/jobs/{job_id}`       | Delete and archive a job                    |
 
 ### Result Endpoints
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/results/{job_id}` | Retrieve extracted, structured output |
+
+| Method | Endpoint                   | Description                           |
+| ------ | -------------------------- | ------------------------------------- |
+| `GET`  | `/api/v1/results/{job_id}` | Retrieve extracted, structured output |
 
 ### Health & Monitoring
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/health` | Basic health check |
-| `GET` | `/api/v1/health/detailed` | Full dependency diagnostics |
-| `GET` | `/metrics` | Prometheus scrape endpoint |
+
+| Method | Endpoint                  | Description                 |
+| ------ | ------------------------- | --------------------------- |
+| `GET`  | `/api/v1/health`          | Basic health check          |
+| `GET`  | `/api/v1/health/detailed` | Full dependency diagnostics |
+| `GET`  | `/metrics`                | Prometheus scrape endpoint  |
 
 📘 Full interactive Swagger documentation is available at **`/api/docs`** once the service is running.
 
@@ -381,11 +402,12 @@ tests/               # Unit/integration test suites
 ## ⚡ Local Setup
 
 ### Prerequisites
+
 - Python 3.11+
 - MongoDB
 - Redis
 - Ollama
-- *(Optional)* Docker, for infrastructure services
+- _(Optional)_ Docker, for infrastructure services
 
 ### Quick Start (Windows example)
 
@@ -410,11 +432,11 @@ python main.py
 
 Then open:
 
-| Service | URL |
-|---|---|
+| Service            | URL                            |
+| ------------------ | ------------------------------ |
 | API Docs (Swagger) | http://localhost:8000/api/docs |
-| Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:3000 |
+| Prometheus         | http://localhost:9090          |
+| Grafana            | http://localhost:3000          |
 
 📖 For complete setup steps, see the included setup guide.
 
