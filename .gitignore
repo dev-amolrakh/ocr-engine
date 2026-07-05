@@ -176,6 +176,10 @@ Thumbs.db
 *.tiff
 *.webp
 
+# Allow committed output image assets
+!output_images/
+!output_images/**
+
 # Storage directories
 storage/archive/
 storage/failed/
