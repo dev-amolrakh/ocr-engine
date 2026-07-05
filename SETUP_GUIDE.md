@@ -1,174 +1,192 @@
-# OCR Service — Local Setup Guide (Windows, No Docker)
+# OCR Service — Local Setup Guide (Windows)
 
-Complete step-by-step guide to run the OCR service on your Windows laptop for testing with Postman.
-
----
-
-## Prerequisites
-
-| Software | Version | Purpose |
-|----------|---------|---------|
-| Python | 3.11+ | Runtime |
-| MongoDB | 7.x | Document database |
-| Redis | 7.x | Message queue (via Memurai or WSL) |
-| Ollama | Latest | Local LLM inference |
-| Git | Any | Version control |
-| Postman | Any | API testing |
+This guide provides a complete, step-by-step setup for running this OCR Engine locally on a Windows machine. It covers the required services, Python environment, model downloads, worker-specific prerequisites, and verification steps.
 
 ---
 
-## Step 1: Install MongoDB
+## 1. Prerequisites
 
-1. Download MongoDB Community Server from:
-   https://www.mongodb.com/try/download/community
+| Software | Version  | Purpose                         |
+| -------- | -------- | ------------------------------- |
+| Python   | 3.11+    | Runtime                         |
+| MongoDB  | 7.x      | Metadata and job storage        |
+| Redis    | 7.x      | Background worker orchestration |
+| Ollama   | Latest   | Local LLM inference for Qwen-VL |
+| Git      | Any      | Version control                 |
+| Postman  | Optional | API testing                     |
 
-2. Choose "Windows x64" → MSI package
+Recommended minimum hardware:
 
-3. During installation:
-   - Select "Complete" installation
-   - Check "Install MongoDB as a Service" (auto-starts on boot)
-   - Install MongoDB Compass (GUI tool — optional but helpful)
-
-4. Verify installation:
-   ```powershell
-   mongosh --eval "db.runCommand({ping:1})"
-   ```
-   You should see: `{ ok: 1 }`
+- 16 GB RAM minimum
+- SSD storage preferred
+- Internet access for installing dependencies and models
 
 ---
 
-## Step 2: Install Redis
+## 2. Install system dependencies
 
-Redis doesn't have an official Windows build. Use one of these options:
+### 2.1 MongoDB
 
-### Option A: Memurai (Recommended — Native Windows Redis)
-
-1. Download from: https://www.memurai.com/get-memurai
-2. Install the free Developer Edition
-3. It runs as a Windows Service automatically
-4. Verify:
-   ```powershell
-   redis-cli ping
-   ```
-   Response: `PONG`
-
-### Option B: Redis via WSL2 (if you have WSL installed)
+1. Download MongoDB Community Server.
+2. Install it as a Windows service.
+3. Verify it is running:
 
 ```powershell
-# In WSL terminal:
-sudo apt update
-sudo apt install redis-server
-sudo service redis-server start
+mongosh --eval "db.runCommand({ping:1})"
+```
+
+Expected output:
+
+```text
+{ ok: 1 }
+```
+
+### 2.2 Redis
+
+Redis is required for the asynchronous worker pipeline.
+
+Recommended options on Windows:
+
+- Memurai (recommended)
+- Redis via WSL2
+- Redis Windows build
+
+Verify Redis:
+
+```powershell
 redis-cli ping
 ```
 
-### Option C: Redis Windows Port (Unofficial)
+Expected output:
 
-Download from: https://github.com/tporadowski/redis/releases
-- Download `Redis-x64-5.0.14.1.msi`
-- Install and it runs as a Windows Service
+```text
+PONG
+```
 
----
+### 2.3 Ollama
 
-## Step 3: Install Ollama
+Ollama is used by the Qwen-VL OCR worker.
 
-1. Download from: https://ollama.com/download/windows
-2. Run the installer
-3. After installation, Ollama runs in the system tray
-4. Pull the required models (open PowerShell):
+1. Install Ollama for Windows.
+2. Start the service.
+3. Pull the required models:
 
 ```powershell
-# Vision model for handwriting OCR (4.7 GB)
 ollama pull qwen2.5vl:7b
-
-# Text extraction model (9 GB)
 ollama pull qwen2.5:14b
 ```
 
-5. Verify Ollama is running:
-   ```powershell
-   curl http://localhost:11434/api/tags
-   ```
-   You should see both models listed.
+Verify the models are available:
 
-> **Note:** These models require ~16 GB RAM total. If your laptop has less RAM,
-> you can use smaller models:
-> ```powershell
-> ollama pull qwen2.5vl:3b    # smaller vision model
-> ollama pull qwen2.5:7b      # smaller extraction model
-> ```
-> Then update `.env` file: `QWEN_VL_MODEL=qwen2.5vl:3b` and `EXTRACTION_MODEL=qwen2.5:7b`
+```powershell
+curl http://localhost:11434/api/tags
+```
+
+If your machine has limited RAM, try smaller models:
+
+```powershell
+ollama pull qwen2.5vl:3b
+ollama pull qwen2.5:7b
+```
+
+Then update the environment variables accordingly.
 
 ---
 
-## Step 4: Set Up Python Environment
+## 3. Clone the repository
 
 ```powershell
-# Navigate to the project
-cd "D:\OCR Engine\ocr_service"
+cd D:\
+mkdir OCR Engine
+cd OCR Engine
+git clone <your-repo-url> ocr_service
+cd ocr_service
+```
 
-# Create virtual environment
+---
+
+## 4. Create a Python virtual environment
+
+```powershell
 python -m venv venv
-
-# Activate it
 .\venv\Scripts\Activate.ps1
-
-# If you get execution policy error, run this first:
-# Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-
-# Upgrade pip
 python -m pip install --upgrade pip
 ```
 
+If PowerShell blocks script execution, run:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
 ---
 
-## Step 5: Install Python Dependencies
+## 5. Install Python dependencies
+
+Install the project requirements:
 
 ```powershell
-# Install all dependencies (CPU mode)
 pip install -r requirements.txt
 ```
 
-### If you face issues with PaddlePaddle:
+### Common troubleshooting
+
+#### PaddleOCR / PaddlePaddle
+
+If install issues occur:
 
 ```powershell
-# Try installing PaddlePaddle separately first
-pip install paddlepaddle==2.6.1
-
-# If that fails, try the latest version
-pip install paddlepaddle
-
-# Then install remaining deps
-pip install -r requirements.txt
+pip install paddlepaddle==2.6.2
+pip install paddleocr==2.8.1
 ```
 
-### If you face issues with torch:
+#### PyTorch
+
+For CPU-only setup:
 
 ```powershell
-# Install CPU-only PyTorch (smaller download)
 pip install torch --index-url https://download.pytorch.org/whl/cpu
-
-# Then install remaining deps
-pip install -r requirements.txt
 ```
+
+#### GPU setup
+
+If you want GPU acceleration, ensure your machine has a compatible CUDA environment before installing GPU-enabled packages.
 
 ---
 
-## Step 6: Download fastText Language Model
+## 6. Download required model files
+
+### 6.1 fastText language model
+
+The language detection worker depends on fastText.
+
+Create the directory:
 
 ```powershell
-# Create models directory
-mkdir -p models\fasttext
+mkdir models\fasttext
+```
 
-# Download the language identification model (126 MB)
+Download the model:
+
+```powershell
 Invoke-WebRequest -Uri "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin" -OutFile "models\fasttext\lid.176.bin"
 ```
 
-Or manually download from the URL and place at: `D:\OCR Engine\ocr_service\models\fasttext\lid.176.bin`
+### 6.2 IndicTrans2 translation model
 
----
+The translation worker can use IndicTrans2 when a compatible model is available.
 
-## Step 7: Create Storage Directories
+Expected directory:
+
+```text
+./models/indictrans2
+```
+
+If the model is not present, the service will gracefully fall back to the original text without translation.
+
+### 6.3 Storage folders
+
+Create the storage structure used by the service:
 
 ```powershell
 mkdir storage\incoming
@@ -179,33 +197,75 @@ mkdir storage\archive
 
 ---
 
-## Step 8: Verify .env Configuration
+## 7. Configure environment variables
 
-The `.env` file is already configured for local testing. Key settings:
+Copy the example configuration:
 
-```ini
-PADDLE_USE_GPU=false          # CPU mode for testing
-DEBUG=true                     # Enables auto-reload
-MONGO_URI=mongodb://localhost:27017
-REDIS_URL=redis://localhost:6379
-OLLAMA_BASE_URL=http://localhost:11434
+```powershell
+copy .env.example .env
 ```
+
+Then update .env with local values such as:
+
+```env
+APP_NAME=ocr-service
+DEBUG=true
+LOG_LEVEL=INFO
+
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=ocr_db
+
+REDIS_URL=redis://localhost:6379
+
+OLLAMA_BASE_URL=http://localhost:11434
+QWEN_VL_MODEL=qwen2.5vl:7b
+EXTRACTION_MODEL=qwen2.5:14b
+
+PADDLE_USE_GPU=false
+PADDLE_CONFIDENCE_THRESHOLD=0.75
+PADDLE_LANG=en
+
+FASTTEXT_MODEL_PATH=./models/fasttext/lid.176.bin
+INDICTRANS2_MODEL_PATH=./models/indictrans2
+```
+
+### Notes
+
+- Use PADDLE_USE_GPU=false for CPU-only machines.
+- If you use smaller Ollama models, update the model names accordingly.
+- If IndicTrans2 is unavailable, translation will simply pass through the original text.
 
 ---
 
-## Step 9: Start the Service
+## 8. Start the infrastructure services
 
-Make sure MongoDB, Redis, and Ollama are all running, then:
+Make sure MongoDB, Redis, and Ollama are running before launching the app.
+
+If you use Docker Compose:
+
+```powershell
+docker-compose up -d mongodb redis ollama prometheus grafana loki
+```
+
+Otherwise ensure these endpoints are reachable:
+
+- MongoDB: localhost:27017
+- Redis: localhost:6379
+- Ollama: localhost:11434
+
+---
+
+## 9. Start the OCR service
 
 ```powershell
 cd "D:\OCR Engine\ocr_service"
 .\venv\Scripts\Activate.ps1
-
 python main.py
 ```
 
-You should see output like:
-```
+Expected startup output:
+
+```text
 INFO:     all_workers_started count=7
 INFO:     application_started app=ocr-service
 INFO:     Uvicorn running on http://0.0.0.0:8000
@@ -213,190 +273,181 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 
 ---
 
-## Step 10: Verify the Service is Running
+## 10. Verify the setup
 
-Open browser: http://localhost:8000/api/docs
+Open the Swagger UI:
 
-This opens the Swagger UI with all available endpoints.
-
----
-
-## Testing with Postman
-
-### Import These Requests:
-
----
-
-### Test 1: Health Check (Basic)
-
+```text
+http://localhost:8000/api/docs
 ```
+
+Test the health endpoint:
+
+```powershell
+curl http://localhost:8000/api/v1/health
+```
+
+Expected response:
+
+```json
+{ "status": "ok" }
+```
+
+Detailed health check:
+
+```powershell
+curl http://localhost:8000/api/v1/health/detailed
+```
+
+---
+
+## 11. Worker-specific setup notes
+
+### OCR worker
+
+This worker uses:
+
+- PaddleOCR for printed text
+- Qwen-VL through Ollama for handwritten or fallback OCR
+
+Required setup:
+
+- PaddleOCR installed
+- Ollama running
+- Qwen-VL model pulled locally
+
+### Language detection worker
+
+Required setup:
+
+- fastText model downloaded at the configured path
+
+### Translation worker
+
+Required setup:
+
+- IndicTrans2 model if full translation is desired
+- If absent, the worker will skip translation and return the source text
+
+### Extraction worker
+
+This worker uses rule-based extraction for known document types and optional LLM-based extraction behavior through the configured models.
+
+### Validation worker
+
+No extra setup is required beyond the main app environment.
+
+---
+
+## 12. Troubleshooting
+
+### PaddleOCR import issues
+
+Run:
+
+```powershell
+pip install -r requirements.txt
+```
+
+### fastText model not found
+
+Check that the file exists:
+
+```powershell
+Test-Path .\models\fasttext\lid.176.bin
+```
+
+### Ollama model not found
+
+Verify with:
+
+```powershell
+curl http://localhost:11434/api/tags
+```
+
+### Redis connection issues
+
+Check Redis:
+
+```powershell
+redis-cli ping
+```
+
+### MongoDB connection issues
+
+Check MongoDB:
+
+```powershell
+mongosh --eval "db.runCommand({ping:1})"
+```
+
+---
+
+## 13. Quick test flow
+
+1. Start MongoDB and Redis
+2. Start Ollama and pull required models
+3. Activate the virtual environment
+4. Install dependencies
+5. Download the fastText model
+6. Configure .env
+7. Run the service
+8. Upload a sample PDF or image via the API
+
+---
+
+## 14. API testing examples
+
+### Health check
+
+```http
 GET http://localhost:8000/api/v1/health
 ```
 
-**Expected Response (200):**
-```json
-{
-    "status": "ok"
-}
-```
+### Detailed health check
 
----
-
-### Test 2: Detailed Health Check
-
-```
+```http
 GET http://localhost:8000/api/v1/health/detailed
 ```
 
-**Expected Response (200):**
-```json
-{
-    "status": "ok",
-    "components": {
-        "mongodb": {"status": "ok", "latency_ms": 2},
-        "redis": {"status": "ok", "latency_ms": 1},
-        "nfs": {"status": "ok", "writable": true},
-        "ollama_qwen_vl": {"status": "ok", "model_loaded": true},
-        "ollama_extraction": {"status": "ok", "model_loaded": true},
-        "paddleocr": {"status": "ok"},
-        "indictrans2": {"status": "unavailable"},
-        "fasttext": {"status": "ok"}
-    }
-}
-```
+### Upload a file
 
-> Note: `indictrans2` will show "unavailable" unless you download the model separately. This is fine for basic testing — translation will just pass through the original text.
-
----
-
-### Test 3: Upload a PDF
-
-```
+```http
 POST http://localhost:8000/api/v1/upload
+Content-Type: multipart/form-data
 ```
 
-**Postman Setup:**
-1. Method: `POST`
-2. URL: `http://localhost:8000/api/v1/upload`
-3. Go to **Body** tab
-4. Select **form-data**
-5. Add key: `file` → Change type to **File** → Select a PDF file
-6. (Optional) Add key: `metadata` → Type: Text → Value: `{"source": "test"}`
-7. Click **Send**
+Form field:
 
-**Expected Response (202):**
-```json
-{
-    "job_id": "JOB-A3F9C2D1E4B7",
-    "status": "queued",
-    "total_pages": 3,
-    "poll_url": "/api/v1/jobs/JOB-A3F9C2D1E4B7"
-}
-```
+- file: your PDF/image file
 
----
+### Check job status
 
-### Test 4: Upload an Image
-
-```
-POST http://localhost:8000/api/v1/upload
-```
-
-Same as above, but select a `.jpg`, `.png`, or `.tiff` image file.
-
----
-
-### Test 5: Check Job Status
-
-```
+```http
 GET http://localhost:8000/api/v1/jobs/{job_id}
 ```
 
-Replace `{job_id}` with the ID from the upload response.
+### Get final results
 
-**Expected Response (200):**
-```json
-{
-    "job_id": "JOB-A3F9C2D1E4B7",
-    "status": "ocr",
-    "total_pages": 3,
-    "processed_pages": 1,
-    "failed_pages": 0,
-    "progress_pct": 33.3,
-    "doc_type": "unknown",
-    "ocr_stats": {
-        "paddle_pages": 1,
-        "qwen_vl_pages": 0,
-        "handwritten_pages": 0
-    }
-}
-```
-
----
-
-### Test 6: Get Final Results (after job completes)
-
-```
+```http
 GET http://localhost:8000/api/v1/results/{job_id}
 ```
 
-**Expected Response (200):**
-```json
-{
-    "job_id": "JOB-A3F9C2D1E4B7",
-    "status": "completed",
-    "doc_type": "invoice",
-    "extracted_data": {
-        "invoice_number": "INV-2024-001",
-        "vendor_name": "ABC Corp",
-        "total_amount": 15000.00
-    },
-    "confidence": 1.0,
-    "ocr_summary": {
-        "total_pages": 3,
-        "languages_detected": ["en"],
-        "pages_translated": 0,
-        "paddle_pages": 3,
-        "qwen_vl_pages": 0,
-        "handwritten_pages": 0
-    }
-}
-```
-
 ---
 
-### Test 7: Get Single Page OCR
+## 15. Summary
 
-```
-GET http://localhost:8000/api/v1/pages/{job_id}/1
-```
+To run this project locally, you need:
 
-**Expected Response (200):**
-```json
-{
-    "job_id": "JOB-A3F9C2D1E4B7",
-    "page": 1,
-    "language": "en",
-    "is_handwritten": false,
-    "ocr_source": "paddle",
-    "ocr_confidence": 0.92,
-    "ocr_text": "Invoice No: INV-2024-001\nDate: 15-01-2024...",
-    "translated_text": null,
-    "status": "completed"
-}
-```
+- Python environment
+- MongoDB
+- Redis
+- Ollama
+- PaddleOCR
+- fastText model
+- Optional IndicTrans2 translation model
 
----
-
-### Test 8: Get All Pages (Paginated)
-
-```
-GET http://localhost:8000/api/v1/pages/{job_id}?page=1&limit=10
-```
-
----
-
-### Test 9: Bulk Status Check
+Once these are configured, the full OCR pipeline can run end-to-end locally.
 
 ```
 POST http://localhost:8000/api/v1/jobs/status
@@ -432,6 +483,7 @@ POST http://localhost:8000/api/v1/upload/bulk
 ```
 
 **Postman Setup:**
+
 1. Method: `POST`
 2. Body → form-data
 3. Add key: `files` → Type: **File** → Select multiple files
@@ -453,19 +505,19 @@ Returns raw Prometheus metrics (counters, histograms, gauges).
 
 Create a new Postman Collection called "OCR Service" and add these requests:
 
-| # | Method | URL | Description |
-|---|--------|-----|-------------|
-| 1 | GET | `http://localhost:8000/api/v1/health` | Liveness |
-| 2 | GET | `http://localhost:8000/api/v1/health/detailed` | Full health |
-| 3 | POST | `http://localhost:8000/api/v1/upload` | Upload file |
-| 4 | POST | `http://localhost:8000/api/v1/upload/bulk` | Bulk upload |
-| 5 | GET | `http://localhost:8000/api/v1/jobs/{{job_id}}` | Job status |
-| 6 | POST | `http://localhost:8000/api/v1/jobs/status` | Bulk status |
-| 7 | GET | `http://localhost:8000/api/v1/results/{{job_id}}` | Results |
-| 8 | GET | `http://localhost:8000/api/v1/pages/{{job_id}}` | All pages |
-| 9 | GET | `http://localhost:8000/api/v1/pages/{{job_id}}/1` | Single page |
-| 10 | POST | `http://localhost:8000/api/v1/jobs/{{job_id}}/retry` | Retry job |
-| 11 | DELETE | `http://localhost:8000/api/v1/jobs/{{job_id}}` | Delete job |
+| #   | Method | URL                                                  | Description |
+| --- | ------ | ---------------------------------------------------- | ----------- |
+| 1   | GET    | `http://localhost:8000/api/v1/health`                | Liveness    |
+| 2   | GET    | `http://localhost:8000/api/v1/health/detailed`       | Full health |
+| 3   | POST   | `http://localhost:8000/api/v1/upload`                | Upload file |
+| 4   | POST   | `http://localhost:8000/api/v1/upload/bulk`           | Bulk upload |
+| 5   | GET    | `http://localhost:8000/api/v1/jobs/{{job_id}}`       | Job status  |
+| 6   | POST   | `http://localhost:8000/api/v1/jobs/status`           | Bulk status |
+| 7   | GET    | `http://localhost:8000/api/v1/results/{{job_id}}`    | Results     |
+| 8   | GET    | `http://localhost:8000/api/v1/pages/{{job_id}}`      | All pages   |
+| 9   | GET    | `http://localhost:8000/api/v1/pages/{{job_id}}/1`    | Single page |
+| 10  | POST   | `http://localhost:8000/api/v1/jobs/{{job_id}}/retry` | Retry job   |
+| 11  | DELETE | `http://localhost:8000/api/v1/jobs/{{job_id}}`       | Delete job  |
 
 > **Tip:** Set a Postman variable `{{job_id}}` and update it after each upload.
 
@@ -474,6 +526,7 @@ Create a new Postman Collection called "OCR Service" and add these requests:
 ## Troubleshooting
 
 ### "Module not found" errors
+
 ```powershell
 # Make sure you're in the ocr_service directory
 cd "D:\OCR Engine\ocr_service"
@@ -482,6 +535,7 @@ cd "D:\OCR Engine\ocr_service"
 ```
 
 ### MongoDB connection refused
+
 ```powershell
 # Check if MongoDB service is running
 Get-Service MongoDB
@@ -490,6 +544,7 @@ Start-Service MongoDB
 ```
 
 ### Redis connection refused
+
 ```powershell
 # If using Memurai
 Get-Service Memurai
@@ -500,6 +555,7 @@ wsl sudo service redis-server start
 ```
 
 ### Ollama not responding
+
 ```powershell
 # Check if Ollama is running (system tray)
 # Or start manually:
@@ -510,13 +566,16 @@ ollama list
 ```
 
 ### PaddleOCR GPU errors
+
 The `.env` is set to `PADDLE_USE_GPU=false`. If you still get CUDA errors:
+
 ```powershell
 pip uninstall paddlepaddle-gpu
 pip install paddlepaddle
 ```
 
 ### Port 8000 already in use
+
 ```powershell
 # Find what's using port 8000
 netstat -ano | findstr :8000
@@ -525,7 +584,9 @@ taskkill /PID <pid> /F
 ```
 
 ### Slow first request
+
 The first OCR request will be slow because:
+
 - PaddleOCR models download on first use (~300 MB)
 - Ollama loads models into RAM on first call
 

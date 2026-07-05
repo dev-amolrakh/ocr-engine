@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Service Administration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .toast-enter { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="adminApp()" x-init="init()">
+
+    <!-- Header -->
+    <header class="bg-slate-800 border-b-4 border-amber-500 shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-slate-800" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white tracking-wide">OCR Service Administration</h1>
+                    <p class="text-slate-300 text-xs">Configuration & Management Console</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-slate-400">Status:</span>
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium" :class="connected ? 'bg-green-900 text-green-200' : 'bg-red-900 text-red-200'">
+                    <span class="w-2 h-2 rounded-full" :class="connected ? 'bg-green-400' : 'bg-red-400'"></span>
+                    <span x-text="connected ? 'Connected' : 'Disconnected'"></span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-6 py-6 flex gap-6">
+        <!-- Sidebar Navigation -->
+        <nav class="w-64 flex-shrink-0">
+            <div class="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
+                <div class="px-4 py-3 bg-slate-700 text-white text-sm font-semibold">Configuration Sections</div>
+                <template x-for="(label, key) in categories" :key="key">
+                    <button @click="activeSection = key" class="w-full text-left px-4 py-3 text-sm border-b border-slate-100 transition-colors" :class="activeSection === key ? 'bg-amber-50 text-amber-800 font-semibold border-l-4 border-l-amber-500' : 'text-slate-700 hover:bg-slate-50'" x-text="label"></button>
+                </template>
+                <button @click="activeSection = 'history'" class="w-full text-left px-4 py-3 text-sm transition-colors" :class="activeSection === 'history' ? 'bg-amber-50 text-amber-800 font-semibold border-l-4 border-l-amber-500' : 'text-slate-700 hover:bg-slate-50'">Change History</button>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-4 bg-white rounded-lg shadow border border-slate-200 p-4 space-y-3">
+                <button @click="saveConfig()" class="w-full bg-slate-700 hover:bg-slate-800 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
+                    Save Configuration
+                </button>
+                <button @click="showResetModal = true" class="w-full bg-white hover:bg-red-50 text-red-700 border border-red-300 py-2 px-4 rounded text-sm font-medium transition-colors">
+                    Reset to Defaults
+                </button>
+                <button @click="loadModels()" class="w-full bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 py-2 px-4 rounded text-sm font-medium transition-colors">
+                    Refresh Ollama Models
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0">
+            <!-- Section: Config Forms -->
+            <template x-for="(label, sectionKey) in categories" :key="sectionKey">
+                <div x-show="activeSection === sectionKey" x-cloak>
+                    <div class="bg-white rounded-lg shadow border border-slate-200">
+                        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                            <h2 class="text-lg font-semibold text-slate-800" x-text="label"></h2>
+                            <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded" x-text="sectionKey"></span>
+                        </div>
+                        <div class="p-6 space-y-5">
+                            <template x-for="(fieldSchema, fieldKey) in (schema[sectionKey] || {})" :key="fieldKey">
+                                <div class="grid grid-cols-3 gap-4 items-start py-3 border-b border-slate-50 last:border-0">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700" x-text="fieldSchema.label"></label>
+                                        <p class="text-xs text-slate-500 mt-0.5" x-text="fieldSchema.desc"></p>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <!-- Boolean toggle -->
+                                        <template x-if="fieldSchema.type === 'bool'">
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" class="sr-only peer" :checked="getVal(sectionKey, fieldKey)" @change="setVal(sectionKey, fieldKey, $event.target.checked)">
+                                                <div class="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                                                <span class="ms-3 text-sm text-slate-600" x-text="getVal(sectionKey, fieldKey) ? 'Enabled' : 'Disabled'"></span>
+                                            </label>
+                                        </template>
+                                        <!-- Select (options) -->
+                                        <template x-if="fieldSchema.options">
+                                            <select class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400" :value="getVal(sectionKey, fieldKey)" @change="setVal(sectionKey, fieldKey, $event.target.value)">
+                                                <template x-for="opt in fieldSchema.options" :key="opt">
+                                                    <option :value="opt" :selected="getVal(sectionKey, fieldKey) === opt" x-text="opt"></option>
+                                                </template>
+                                            </select>
+                                        </template>
+                                        <!-- Model selector (with Ollama dropdown) -->
+                                        <template x-if="!fieldSchema.options && fieldSchema.type === 'str' && (fieldKey.includes('MODEL') || fieldKey.includes('_VL_'))">
+                                            <div class="flex gap-2">
+                                                <input type="text" class="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400" :value="getVal(sectionKey, fieldKey)" @input="setVal(sectionKey, fieldKey, $event.target.value)">
+                                                <select class="border border-slate-300 rounded-md px-2 py-2 text-xs text-slate-600" @change="if($event.target.value) setVal(sectionKey, fieldKey, $event.target.value); $event.target.value=''">
+                                                    <option value="">Select model...</option>
+                                                    <template x-for="m in ollamaModels" :key="m.name">
+                                                        <option :value="m.name" x-text="m.name + ' (' + m.size_gb + ' GB)'"></option>
+                                                    </template>
+                                                </select>
+                                            </div>
+                                        </template>
+                                        <!-- String input -->
+                                        <template x-if="!fieldSchema.options && fieldSchema.type === 'str' && !(fieldKey.includes('MODEL') || fieldKey.includes('_VL_'))">
+                                            <input :type="fieldSchema.sensitive ? 'password' : 'text'" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400" :value="getVal(sectionKey, fieldKey)" @input="setVal(sectionKey, fieldKey, $event.target.value)">
+                                        </template>
+                                        <!-- Number input -->
+                                        <template x-if="fieldSchema.type === 'int' || fieldSchema.type === 'float'">
+                                            <input type="number" :step="fieldSchema.type === 'float' ? '0.01' : '1'" :min="fieldSchema.min" :max="fieldSchema.max" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400" :value="getVal(sectionKey, fieldKey)" @input="setVal(sectionKey, fieldKey, fieldSchema.type === 'float' ? parseFloat($event.target.value) : parseInt($event.target.value))">
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- History Section -->
+            <div x-show="activeSection === 'history'" x-cloak>
+                <div class="bg-white rounded-lg shadow border border-slate-200">
+                    <div class="px-6 py-4 border-b border-slate-200">
+                        <h2 class="text-lg font-semibold text-slate-800">Configuration Change History</h2>
+                    </div>
+                    <div class="p-6">
+                        <template x-if="history.length === 0">
+                            <p class="text-slate-500 text-sm">No configuration changes recorded yet.</p>
+                        </template>
+                        <div class="space-y-3">
+                            <template x-for="(entry, idx) in history" :key="idx">
+                                <div class="border border-slate-200 rounded p-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm font-medium text-slate-700" x-text="entry.action || ('Updated by ' + (entry.saved_by || 'admin'))"></span>
+                                        <span class="text-xs text-slate-500" x-text="entry.saved_at || ''"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Reset Modal -->
+    <div x-show="showResetModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6" @click.outside="showResetModal = false">
+            <h3 class="text-lg font-bold text-slate-800">Reset Configuration</h3>
+            <p class="mt-2 text-sm text-slate-600">This will reset all settings to the original .env defaults. This action cannot be undone.</p>
+            <div class="mt-4 flex gap-3 justify-end">
+                <button @click="showResetModal = false" class="px-4 py-2 text-sm border border-slate-300 rounded hover:bg-slate-50">Cancel</button>
+                <button @click="resetToDefaults()" class="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700">Reset All Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="fixed top-4 right-4 z-50 space-y-2">
+        <template x-for="(toast, idx) in toasts" :key="idx">
+            <div class="toast-enter px-4 py-3 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2 min-w-[280px]" :class="toast.type === 'success' ? 'bg-green-700 text-white' : 'bg-red-700 text-white'">
+                <svg x-show="toast.type === 'success'" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <svg x-show="toast.type === 'error'" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                <span x-text="toast.message"></span>
+            </div>
+        </template>
+    </div>
+
+    <script>
+    function adminApp() {
+        return {
+            activeSection: 'models',
+            config: {},
+            schema: {},
+            ollamaModels: [],
+            history: [],
+            connected: false,
+            showResetModal: false,
+            toasts: [],
+
+            categories: {
+                models: 'Models & AI',
+                ocr_thresholds: 'OCR Thresholds',
+                preprocessing: 'Image Preprocessing',
+                workers: 'Worker Tuning',
+                storage: 'Storage Paths',
+                infrastructure: 'Infrastructure',
+                upload_limits: 'Upload Limits',
+            },
+
+            async init() {
+                await this.loadConfig();
+                await this.loadModels();
+                await this.loadHistory();
+            },
+
+            async loadConfig() {
+                try {
+                    const resp = await fetch('/api/v1/admin/config');
+                    const data = await resp.json();
+                    this.config = data.config || {};
+                    this.schema = data.schema || {};
+                    this.connected = true;
+                } catch (e) {
+                    this.connected = false;
+                    this.showToast('Failed to load configuration', 'error');
+                }
+            },
+
+            async loadModels() {
+                try {
+                    const resp = await fetch('/api/v1/admin/models');
+                    const data = await resp.json();
+                    this.ollamaModels = data.models || [];
+                } catch (e) {
+                    this.ollamaModels = [];
+                }
+            },
+
+            async loadHistory() {
+                try {
+                    const resp = await fetch('/api/v1/admin/config/history');
+                    const data = await resp.json();
+                    this.history = data.history || [];
+                } catch (e) {
+                    this.history = [];
+                }
+            },
+
+            async saveConfig() {
+                try {
+                    const resp = await fetch('/api/v1/admin/config', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(this.config),
+                    });
+                    if (resp.ok) {
+                        this.showToast('Configuration saved successfully', 'success');
+                        await this.loadHistory();
+                    } else {
+                        const err = await resp.json();
+                        this.showToast('Save failed: ' + (err.detail || 'Unknown error'), 'error');
+                    }
+                } catch (e) {
+                    this.showToast('Network error: ' + e.message, 'error');
+                }
+            },
+
+            async resetToDefaults() {
+                try {
+                    const resp = await fetch('/api/v1/admin/config/reset', { method: 'POST' });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        this.config = data.config || {};
+                        this.showResetModal = false;
+                        this.showToast('Configuration reset to defaults', 'success');
+                        await this.loadHistory();
+                    }
+                } catch (e) {
+                    this.showToast('Reset failed: ' + e.message, 'error');
+                }
+            },
+
+            getVal(section, key) {
+                return this.config?.[section]?.[key] ?? '';
+            },
+
+            setVal(section, key, value) {
+                if (!this.config[section]) this.config[section] = {};
+                this.config[section][key] = value;
+            },
+
+            showToast(message, type = 'success') {
+                this.toasts.push({ message, type });
+                setTimeout(() => this.toasts.shift(), 4000);
+            },
+        };
+    }
+    </script>
+</body>
+</html>

@@ -5,8 +5,10 @@ from prometheus_client import make_asgi_app
 import structlog
 
 from api.routes import upload, jobs, results, pages, health
+from api.routes import admin
 from db.mongo import connect_db, disconnect_db, create_indexes
 from mq.redis_client import connect_redis, disconnect_redis
+from services.config_service import load_config_from_db, apply_config_to_settings
 from middleware.logging import LoggingMiddleware
 from middleware.error_handler import register_error_handlers
 from workers.renderer_worker import RendererWorker
@@ -60,6 +62,11 @@ async def lifespan(app: FastAPI):
     # ── Startup ──
     await connect_db()
     await create_indexes()
+    # Load saved config from DB (overrides .env with last saved admin settings)
+    saved_config = await load_config_from_db()
+    if saved_config:
+        apply_config_to_settings(saved_config)
+        log.info("config_loaded_from_db")
     await connect_redis()
     await start_all_workers()
     log.info("application_started", app=settings.APP_NAME)
@@ -88,6 +95,7 @@ app.include_router(jobs.router, prefix="/api/v1", tags=["jobs"])
 app.include_router(results.router, prefix="/api/v1", tags=["results"])
 app.include_router(pages.router, prefix="/api/v1", tags=["pages"])
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
+app.include_router(admin.router, prefix="/api/v1", tags=["admin"])
 
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)

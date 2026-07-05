@@ -60,5 +60,16 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
 
+    def reload_from_dict(self, data: dict) -> None:
+        """Update settings from a flat dictionary. Used by admin config service."""
+        for key, value in data.items():
+            if hasattr(self, key) and value is not None:
+                try:
+                    expected_type = type(getattr(self, key))
+                    casted = expected_type(value)
+                    object.__setattr__(self, key, casted)
+                except (ValueError, TypeError):
+                    pass
+
 
 settings = Settings()
