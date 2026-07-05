@@ -190,21 +190,21 @@ One of the key engineering decisions in this system is **routing documents to di
 </tr>
 <tr>
 <td align="center">
-<img src="output_images/Screenshot 2026-07-05 123208.png" alt="Printed document input sample - PAN card OCR" width="100%"/>
+<img src="OCR_Engine/output_images/Screenshot 2026-07-05 123208.png" alt="Printed document input sample - PAN card OCR" width="100%"/>
 <br><sub><b>Input:</b> Printed document (e.g., Aadhar card )</sub>
 </td>
 <td align="center">
-<img src="output_images/Screenshot 2026-07-05 124741.png" alt="Handwritten document input sample - FRA claim form OCR" width="100%"/>
+<img src="OCR_Engine/output_images/Screenshot 2026-07-05 124741.png" alt="Handwritten document input sample - FRA claim form OCR" width="100%"/>
 <br><sub><b>Input:</b> Handwritten document (e.g., Test Online Handwritten image  </sub>
 </td>
 </tr>
 <tr>
 <td align="center">
-<img src="output_images/Screenshot 2026-07-05 124128.png" alt="PaddleOCR extracted structured text output" width="100%"/>
+<img src="OCR_Engine/output_images/Screenshot 2026-07-05 124128.png" alt="PaddleOCR extracted structured text output" width="100%"/>
 <br><sub><b>Output:</b> PaddleOCR → structured JSON (confidence ≥ 0.75)</sub>
 </td>
 <td align="center">
-<img src="output_images/Screenshot 2026-07-05 124830.png" alt="Qwen-VL extracted structured text output from handwritten document" width="100%"/>
+<img src="OCR_Engine/output_images/Screenshot 2026-07-05 124830.png" alt="Qwen-VL extracted structured text output from handwritten document" width="100%"/>
 <br><sub><b>Output:</b> Qwen-VL fallback → structured JSON</sub>
 </td>
 </tr>
