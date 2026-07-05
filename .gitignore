@@ -182,6 +182,13 @@ storage/failed/
 storage/incoming/
 storage/processed/
 
+# Large model files
+models/fasttext/*.bin
+models/fasttext/*.bin.gz
+models/indictrans2/**
+!models/indictrans2/README.md
+!models/fasttext/README.md
+
 # Logs
 *.log
 
